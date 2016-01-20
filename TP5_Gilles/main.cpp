@@ -29,9 +29,12 @@ float ty=-5.0;
 
 // Tableau des points de contrôles en global ...
 point3 TabPC[4];
+point3 TabPC2[4];
 // Ordre de la courbre  : Ordre
 // Degré de la courbe = Ordre - 1
-int Ordre = 4;
+int OrdreTotale = 7;
+int OrdrePC = 4;
+int OrdrePC2 = 5;
 
 
 
@@ -88,16 +91,60 @@ static void init()
 	TabPC[2] = point3(1, 1, 0);
 	TabPC[3] = point3(2, -2, 0);
 
-	printf("fact = %f",fact(15));
+
+	TabPC2[0] = point3(1, 1, 0);
+	TabPC2[1] = point3(2,-2,0);
+	TabPC2[2] = point3(3, -2, 0);
+	TabPC2[3] = point3(1, -4, 0);
+	TabPC2[4] = point3(-2, -3, 0);
+
 }
 
+void DoubleBezier()
+{
+	float t = 0;
+	glColor3f(1.0, 0.0, 0.0);
+	glBegin(GL_LINE_STRIP);
+	while (t < 1){
+
+		float x = 0, y = 0, z = 0;
+		for (int i = 0; i < OrdrePC; i++){
+			x += TabPC[i].x* Bernstein(i, OrdrePC - 1, t);
+			y += TabPC[i].y* Bernstein(i, OrdrePC - 1, t);
+			z += TabPC[i].z* Bernstein(i, OrdrePC - 1, t);
+		}
+
+		glVertex3f(x, y, z);
+		t += 0.01;
+	}
+	glEnd();
+
+	// Dessiner ici la courbe de Bézier.
+	// Vous devez avoir implémenté Bernstein précédemment.*
+	t = 0;
+	glColor3f(0.0, 1.0, 0.0);
+	glBegin(GL_LINE_STRIP);
+	while (t < 1){
+
+		float x = 0, y = 0, z = 0;
+		for (int i = 0; i < OrdrePC2; i++){
+			x += TabPC2[i].x* Bernstein(i, OrdrePC2 - 1, t);
+			y += TabPC2[i].y* Bernstein(i, OrdrePC2 - 1, t);
+			z += TabPC2[i].z* Bernstein(i, OrdrePC2 - 1, t);
+		}
+
+		glVertex3f(x, y, z);
+		t += 0.01;
+	}
+	glEnd();
+}
 
 /* Dessin */
 void display(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
-	
-   
+
+
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	//glTranslatef(tx,ty,0.0);
@@ -105,50 +152,86 @@ void display(void)
 	//Hermite(point3(0, 0, 0), point3(2, 0, 0), point3(8, 8, 0), point3(8, -8, 0));
 
 	point3 Ptemp;
-	
-	TabPC[numPoint]=TabPC[numPoint]+point3(tx,ty,0);
 
+	if (numPoint < 2){
+		TabPC[numPoint] = TabPC[numPoint] + point3(tx, ty, 0);
+	}
+	else if (numPoint == 2) {
+		TabPC[numPoint] = TabPC[numPoint] + point3(tx, ty, 0);
+		TabPC2[0] = TabPC2[0] + point3(tx, ty, 0);
+	}
+	else if ( numPoint == 3){
+		TabPC[numPoint] = TabPC[numPoint] + point3(tx, ty, 0);
+		TabPC2[1] = TabPC2[1] + point3(tx, ty, 0);
+	}
+	else{
+		TabPC2[numPoint - 2] = TabPC2[numPoint - 2] + point3(tx, ty, 0);
+	}
 	// Enveloppe des points de controles
-	glColor3f (1.0, 0.0, 0.0);
+	glColor3f(1.0, 0.0, 0.0);
 	glBegin(GL_LINE_STRIP);
-        for (int i =0; i < Ordre; i++)
-        {
-		 glVertex3f(TabPC[i].x, TabPC[i].y, TabPC[i].z);
-        }
-    glEnd(); 
+	for (int i = 0; i < OrdrePC; i++)
+	{
+		glVertex3f(TabPC[i].x, TabPC[i].y, TabPC[i].z);
+	}
+	glEnd();
+
+	// Enveloppe des points de controles2
+	glColor3f(0.0, 1.0, 0.0);
+	glBegin(GL_LINE_STRIP);
+	for (int i = 0; i < OrdrePC2; i++)
+	{
+		glVertex3f(TabPC2[i].x, TabPC2[i].y, TabPC2[i].z);
+	}
+	glEnd();
 
 
 	// Affichage du point de controle courant
 	// On se déplace ensuite avec + et - 
-    // ° d'un point de contrôle au suivant (+)
-    // ° d'un point de contrôle au précédent (-)
-	glColor3f (0.0, 0.0, 1.0);
+	// ° d'un point de contrôle au suivant (+)
+	// ° d'un point de contrôle au précédent (-)
+	glColor3f(0.0, 0.0, 1.0);
 	glBegin(GL_LINE_LOOP);
-		glVertex3f(TabPC[numPoint].x+0.1, TabPC[numPoint].y+0.1, TabPC[numPoint].z);
-		glVertex3f(TabPC[numPoint].x+0.1, TabPC[numPoint].y-0.1, TabPC[numPoint].z);
-		glVertex3f(TabPC[numPoint].x-0.1, TabPC[numPoint].y-0.1, TabPC[numPoint].z);
-		glVertex3f(TabPC[numPoint].x-0.1, TabPC[numPoint].y+0.1, TabPC[numPoint].z);
+		if (numPoint < 3){
+			glVertex3f(TabPC[numPoint].x + 0.1, TabPC[numPoint].y + 0.1, TabPC[numPoint].z);
+			glVertex3f(TabPC[numPoint].x + 0.1, TabPC[numPoint].y - 0.1, TabPC[numPoint].z);
+			glVertex3f(TabPC[numPoint].x - 0.1, TabPC[numPoint].y - 0.1, TabPC[numPoint].z);
+			glVertex3f(TabPC[numPoint].x - 0.1, TabPC[numPoint].y + 0.1, TabPC[numPoint].z);
+		}
+		else if (numPoint == 2){
+			glVertex3f(TabPC[numPoint].x + 0.1, TabPC[numPoint].y + 0.1, TabPC[numPoint].z);
+			glVertex3f(TabPC[numPoint].x + 0.1, TabPC[numPoint].y - 0.1, TabPC[numPoint].z);
+			glVertex3f(TabPC[numPoint].x - 0.1, TabPC[numPoint].y - 0.1, TabPC[numPoint].z);
+			glVertex3f(TabPC[numPoint].x - 0.1, TabPC[numPoint].y + 0.1, TabPC[numPoint].z);
+
+			glVertex3f(TabPC2[0].x + 0.1, TabPC2[0].y + 0.1, TabPC2[0].z);
+			glVertex3f(TabPC2[0].x + 0.1, TabPC2[0].y - 0.1, TabPC2[0].z);
+			glVertex3f(TabPC2[0].x - 0.1, TabPC2[0].y - 0.1, TabPC2[0].z);
+			glVertex3f(TabPC2[0].x - 0.1, TabPC2[0].y + 0.1, TabPC2[0].z);
+		}
+		else if (numPoint == 3){
+			glVertex3f(TabPC[numPoint].x + 0.1, TabPC[numPoint].y + 0.1, TabPC[numPoint].z);
+			glVertex3f(TabPC[numPoint].x + 0.1, TabPC[numPoint].y - 0.1, TabPC[numPoint].z);
+			glVertex3f(TabPC[numPoint].x - 0.1, TabPC[numPoint].y - 0.1, TabPC[numPoint].z);
+			glVertex3f(TabPC[numPoint].x - 0.1, TabPC[numPoint].y + 0.1, TabPC[numPoint].z);
+
+			glVertex3f(TabPC2[1].x + 0.1, TabPC2[1].y + 0.1, TabPC2[1].z);
+			glVertex3f(TabPC2[1].x + 0.1, TabPC2[1].y - 0.1, TabPC2[1].z);
+			glVertex3f(TabPC2[1].x - 0.1, TabPC2[1].y - 0.1, TabPC2[1].z);
+			glVertex3f(TabPC2[1].x - 0.1, TabPC2[1].y + 0.1, TabPC2[1].z);
+		}
+		else{
+			glVertex3f(TabPC2[numPoint - 2].x + 0.1, TabPC2[numPoint - 2].y + 0.1, TabPC2[numPoint - 2].z);
+			glVertex3f(TabPC2[numPoint - 2].x + 0.1, TabPC2[numPoint - 2].y - 0.1, TabPC2[numPoint - 2].z);
+			glVertex3f(TabPC2[numPoint - 2].x - 0.1, TabPC2[numPoint - 2].y - 0.1, TabPC2[numPoint - 2].z);
+			glVertex3f(TabPC2[numPoint - 2].x - 0.1, TabPC2[numPoint - 2].y + 0.1, TabPC2[numPoint - 2].z);
+		}
 	glEnd(); 
 
 	// Dessiner ici la courbe de Bézier.
 	// Vous devez avoir implémenté Bernstein précédemment.*
-	float t = 0;
-	glColor3f(1.0, 0.0, 0.0);
-	glBegin(GL_LINE_STRIP);
-	while (t < 1){
+	DoubleBezier();
 
-		float x=0, y=0,z=0;
-		for (int i = 0; i < Ordre; i++){
-			x += TabPC[i].x* Bernstein(i, Ordre-1, t);
-			y += TabPC[i].y* Bernstein(i, Ordre-1, t);
-			z += TabPC[i].z* Bernstein(i, Ordre-1, t);
-		}
-
-		glVertex3f(x, y, z);
-		t += 0.01;
-	}
-	glEnd();
-	
 	glEnd(); 
 	glFlush();
 }
@@ -168,7 +251,7 @@ void keyboard(unsigned char key, int x, int y)
 {
    switch (key) {
    case '+':
-		if (numPoint < Ordre-1)
+	   if (numPoint < OrdreTotale - 1)
 		   numPoint = numPoint + 1;
         else
             numPoint = 0;
@@ -179,12 +262,13 @@ void keyboard(unsigned char key, int x, int y)
 		if (numPoint > 0) 
 		   numPoint = numPoint - 1;
         else
-            numPoint = Ordre-1;
+			numPoint = OrdreTotale - 1;
 		tx=0;
 		ty=0;
 		break;
 
    case 'd':
+	   printf("direction");
          tx=0.1;
 		 ty=0;
       break;
